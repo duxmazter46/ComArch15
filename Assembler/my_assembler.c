@@ -13,6 +13,8 @@ typedef struct {
     int add;
 } LabelEntry;
 
+int code[32] = {0};
+
 int readAndParse(FILE *, char *, char *, char *, char *, char *);
 int isNumber(char *);
 void firstPass(FILE *, LabelEntry[], int *);
@@ -75,6 +77,8 @@ int main(int argc, char *argv[])
 
     // Rewind the input file for the second pass
     rewind(inFilePtr);
+
+    secondPass(inFilePtr, labelTable, &labelCount);
 
 
     return(0);
@@ -179,7 +183,7 @@ void firstPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
             if (*labelCount < MAXLABELS) {
                 strcpy(labelTable[*labelCount].name, label);
                 labelTable[*labelCount].add = lineCounter-1; 
-                labelTable[*labelCount].value = -1;// Initialize value to -1
+                labelTable[*labelCount].value = 0;// Initialize value to 0
                 (*labelCount)++;
             } else {
                 fprintf(stderr, "Error: Maximum number of labels (%d) exceeded at line %d\n", MAXLABELS, lineCounter);
@@ -203,6 +207,93 @@ void firstPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
 
 }
 
+void secondPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
+    char label[MAXLINELENGTH], opcode[MAXLINELENGTH], arg0[MAXLINELENGTH],
+        arg1[MAXLINELENGTH], arg2[MAXLINELENGTH];
+
+    int lineCounter = 0;
+
+    while (readAndParse(inFilePtr, label, opcode, arg0, arg1, arg2)) {
+        lineCounter++;
+
+        if (strcmp(opcode, ".fill") == 0) {
+            int value;
+
+            if (isNumber(arg0)) {
+                // If arg0 is a number, use it as the value
+                value = atoi(arg0);
+            } else {
+                // Find the label's corresponding value
+                for (int i = 0; i < *labelCount; i++) {
+                    if (strcmp(labelTable[i].name, arg0) == 0) {
+                        labelTable[i].value = labelTable[i].add;
+                        break;
+                    }
+                }
+            }
+
+            // Update the value in the labelTable
+            for (int i = 0; i < *labelCount; i++) {
+                if (strcmp(labelTable[i].name, label) == 0) {
+                    labelTable[i].value = value;
+                    break;
+                }
+            }
+        }
+    }
+
+    // Print all labels and their updated values
+    printf("\nLabels and Updated Values after Second Pass:\n");
+    for (int i = 0; i < *labelCount; i++) {
+        printf("Label: %-10s Value: %d Address: %d\n", labelTable[i].name, labelTable[i].value, labelTable[i].add);
+    }
+}
+
+void thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
+    char label[MAXLINELENGTH], opcode[MAXLINELENGTH], arg0[MAXLINELENGTH],
+        arg1[MAXLINELENGTH], arg2[MAXLINELENGTH];
+
+    int machineCode[32] = {0}; 
+
+
+    int lineCounter = 0;
+
+    while (readAndParse(inFilePtr, label, opcode, arg0, arg1, arg2)) {
+        lineCounter++;
+
+        // Map the opcode to machine code based on the instruction
+        if (strcmp(opcode, "add") == 0) {
+        // Map "add" instruction to machine code
+            
+        } else if (strcmp(opcode, "nand") == 0) {
+        // Map "nand" instruction to machine code
+        
+        }else if (strcmp(opcode, "lw") == 0) {
+        // Map "lw" instruction to machine code
+        
+        }else if (strcmp(opcode, "sw") == 0) {
+        // Map "sw" instruction to machine code
+        
+        }else if (strcmp(opcode, "beq") == 0) {
+        // Map "beq" instruction to machine code
+        
+        }else if (strcmp(opcode, "jalr") == 0) {
+        // Map "jalr" instruction to machine code
+        
+        }else if (strcmp(opcode, "halt") == 0) {
+        // Map "halt" instruction to machine code
+        
+        }else if (strcmp(opcode, "noop") == 0) {
+        // Map "noop" instruction to machine code
+        
+        }else if (strcmp(opcode, ".fill") == 0) {
+        // Map ".fill" instruction to machine code
+        
+        }
+
+    }
+
+}
 
 
 
