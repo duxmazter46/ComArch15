@@ -261,28 +261,38 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
         arg1[MAXLINELENGTH], arg2[MAXLINELENGTH];
 
     int machineCode[32] = {0}; 
+    int value;
 
     int lineCounter = 0;
     printf("\n");
 
     while (readAndParse(inFilePtr, label, opcode, arg0, arg1, arg2)) {
         lineCounter++;
+        
+        for(int i = 0; i < 32;i++){
+            machineCode[i] = 0;
+        }
+    
 
         // Map the opcode to machine code based on the instruction
         if (strcmp(opcode, "add") == 0) {
         // Map "add" instruction to machine code
 
             machineCode[24] = 0;machineCode[23] = 0;machineCode[22] = 0;
+            printf("opcode:%d%d%d ",machineCode[24],machineCode[23],machineCode[22]);
 
             int* regA = decimalToBinary3Array(atoi(arg0));
             int* regB = decimalToBinary3Array(atoi(arg1));
             int* dest = decimalToBinary3Array(atoi(arg2));
 
             machineCode[21] = regA[2];machineCode[20] = regA[1];machineCode[19] = regA[0];
+            printf("regA:%d%d%d ",machineCode[21],machineCode[20],machineCode[19]);
 
             machineCode[18] = regB[2];machineCode[17] = regB[1];machineCode[16] = regB[0];
+            printf("regB:%d%d%d ",machineCode[18],machineCode[17],machineCode[16]);
 
             machineCode[2] = dest[2];machineCode[1] = dest[1];machineCode[0] = dest[0];
+            printf("dest:%d%d%d ",machineCode[2],machineCode[1],machineCode[0]);
 
             free(regA);
             free(regB);
@@ -491,11 +501,7 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
                 }
             }
 
-            // Convert the offset value to binary and copy it to machineCode[15]->[0]
-            offsetBinary = decimalToBinary16Array(offset);
-            for (int i = 0; i < 16; i++) {
-                machineCode[i] = offsetBinary[i];
-            }
+            value = offset;
 
             free(offsetBinary);
 
@@ -504,13 +510,20 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
         }
 
         // Print the address "i: 000..."
-        printf("Address %d :", lineCounter);
+        printf("(address %d): ", lineCounter-1);
+        
 
-        // Print the machineCode from bit 32 to 1
-        for (int i = 31; i >= 0; i--) {
+        if(strcmp(opcode,".fill") != 0){
+            // Print the machineCode from bit 32 to 1
+            for (int i = 31; i >= 0; i--) {
             printf("%d", machineCode[i]);
         }
         printf("\n");
+        }else{
+            printf("%d\n",value);
+        }
+        
+        
 
     }
 
