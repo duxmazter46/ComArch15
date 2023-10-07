@@ -19,6 +19,9 @@ int readAndParse(FILE *, char *, char *, char *, char *, char *);
 int isNumber(char *);
 void firstPass(FILE *, LabelEntry[], int *);
 void secondPass(FILE *, LabelEntry[], int*);
+int thirdPass(FILE *, LabelEntry[], int*);
+int* decimalToBinary3Array(int );
+int* decimalToBinary16Array(int );
 
 int main(int argc, char *argv[])
 {
@@ -79,6 +82,11 @@ int main(int argc, char *argv[])
     rewind(inFilePtr);
 
     secondPass(inFilePtr, labelTable, &labelCount);
+
+    // Rewind the input file for the third pass
+    rewind(inFilePtr);
+
+    thirdPass(inFilePtr, labelTable, &labelCount);
 
 
     return(0);
@@ -153,7 +161,6 @@ void firstPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
 
     while (readAndParse(inFilePtr, label, opcode, arg0, arg1, arg2)) {
         lineCounter++;
-
         // Check if the opcode belongs to a specific group
         if (strcmp(opcode, "add") == 0 || strcmp(opcode, "nand") == 0) {
             // Instructions in the "add" and "nand" group (R-type)
@@ -249,14 +256,14 @@ void secondPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
     }
 }
 
-void thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
+int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
     char label[MAXLINELENGTH], opcode[MAXLINELENGTH], arg0[MAXLINELENGTH],
         arg1[MAXLINELENGTH], arg2[MAXLINELENGTH];
 
     int machineCode[32] = {0}; 
 
-
     int lineCounter = 0;
+    printf("\n");
 
     while (readAndParse(inFilePtr, label, opcode, arg0, arg1, arg2)) {
         lineCounter++;
@@ -264,35 +271,314 @@ void thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
         // Map the opcode to machine code based on the instruction
         if (strcmp(opcode, "add") == 0) {
         // Map "add" instruction to machine code
-            
+
+            machineCode[24] = 0;machineCode[23] = 0;machineCode[22] = 0;
+
+            int* regA = decimalToBinary3Array(atoi(arg0));
+            int* regB = decimalToBinary3Array(atoi(arg1));
+            int* dest = decimalToBinary3Array(atoi(arg2));
+
+            machineCode[21] = regA[2];machineCode[20] = regA[1];machineCode[19] = regA[0];
+
+            machineCode[18] = regB[2];machineCode[17] = regB[1];machineCode[16] = regB[0];
+
+            machineCode[2] = dest[2];machineCode[1] = dest[1];machineCode[0] = dest[0];
+
+            free(regA);
+            free(regB);
+            free(dest);
+
+
         } else if (strcmp(opcode, "nand") == 0) {
         // Map "nand" instruction to machine code
-        
+
+            machineCode[24] = 0;machineCode[23] = 0;machineCode[22] = 1;
+
+            int* regA = decimalToBinary3Array(atoi(arg0));
+            int* regB = decimalToBinary3Array(atoi(arg1));
+            int* dest = decimalToBinary3Array(atoi(arg2));
+
+            machineCode[21] = regA[2];machineCode[20] = regA[1];machineCode[19] = regA[0];
+
+            machineCode[18] = regB[2];machineCode[17] = regB[1];machineCode[16] = regB[0];
+
+            machineCode[2] = dest[2];machineCode[1] = dest[1];machineCode[0] = dest[0];
+
+            free(regA);
+            free(regB);
+            free(dest);
+
+
         }else if (strcmp(opcode, "lw") == 0) {
         // Map "lw" instruction to machine code
-        
+
+            machineCode[24] = 0; machineCode[23] = 1; machineCode[22] = 0;
+
+            int* regA = decimalToBinary3Array(atoi(arg0));
+            int* regB = decimalToBinary3Array(atoi(arg1));
+
+            machineCode[21] = regA[2]; machineCode[20] = regA[1]; machineCode[19] = regA[0];
+
+            machineCode[18] = regB[2]; machineCode[17] = regB[1]; machineCode[16] = regB[0];
+
+            int offset;
+            int* offsetBinary = NULL;
+
+            if (isNumber(arg2)) {
+                // If arg2 is a number, use it directly
+                offset = atoi(arg2);
+            } else {
+                // Find the label's corresponding value
+                offset = 32768; // Initialize to an invalid value
+                for (int i = 0; i < *labelCount; i++) {
+                    if (strcmp(labelTable[i].name, arg2) == 0) {
+                        offset = labelTable[i].value;
+                        break;
+                    }
+                }
+
+                if (offset == 32768) {
+                    fprintf(stderr, "Error: Label '%s' not found at line %d\n", arg2, lineCounter);
+                    exit(1);
+                }
+            }
+
+            // Convert the offset value to binary and copy it to machineCode[15]->[0]
+            offsetBinary = decimalToBinary16Array(offset);
+            for (int i = 0; i < 16; i++) {
+                machineCode[i] = offsetBinary[i];
+            }
+
+            free(regA);
+            free(regB);
+            free(offsetBinary);
         }else if (strcmp(opcode, "sw") == 0) {
-        // Map "sw" instruction to machine code
-        
+        // Map "sw" instruction to  machine code
+
+            machineCode[24] = 0;machineCode[23] = 1;machineCode[22] = 1;
+
+            int* regA = decimalToBinary3Array(atoi(arg0));
+            int* regB = decimalToBinary3Array(atoi(arg1));
+
+            machineCode[21] = regA[2]; machineCode[20] = regA[1]; machineCode[19] = regA[0];
+
+            machineCode[18] = regB[2]; machineCode[17] = regB[1]; machineCode[16] = regB[0];
+
+            int offset;
+            int* offsetBinary = NULL;
+
+            if (isNumber(arg2)) {
+                // If arg2 is a number, use it directly
+                offset = atoi(arg2);
+            } else {
+                // Find the label's corresponding value
+                offset = 32768; // Initialize to an invalid value
+                for (int i = 0; i < *labelCount; i++) {
+                    if (strcmp(labelTable[i].name, arg2) == 0) {
+                        offset = labelTable[i].value;
+                        break;
+                    }
+                }
+
+                if (offset == 32768) {
+                    fprintf(stderr, "Error: Label '%s' not found at line %d\n", arg2, lineCounter);
+                    exit(1);
+                }
+            }
+
+            // Convert the offset value to binary and copy it to machineCode[15]->[0]
+            offsetBinary = decimalToBinary16Array(offset);
+            for (int i = 0; i < 16; i++) {
+                machineCode[i] = offsetBinary[i];
+            }
+
+            free(regA);
+            free(regB);
+            free(offsetBinary);
+
+
         }else if (strcmp(opcode, "beq") == 0) {
         // Map "beq" instruction to machine code
-        
+
+            machineCode[24] = 1;machineCode[23] = 0;machineCode[22] = 0;
+
+            int* regA = decimalToBinary3Array(atoi(arg0));
+            int* regB = decimalToBinary3Array(atoi(arg1));
+
+            machineCode[21] = regA[2]; machineCode[20] = regA[1]; machineCode[19] = regA[0];
+
+            machineCode[18] = regB[2]; machineCode[17] = regB[1]; machineCode[16] = regB[0];
+
+            int offset;
+            int* offsetBinary = NULL;
+
+            if (isNumber(arg2)) {
+                // If arg2 is a number, use it directly
+                offset = atoi(arg2);
+            } else {
+                // Find the label's corresponding value
+                offset = 32768; // Initialize to an invalid value
+                for (int i = 0; i < *labelCount; i++) {
+                    if (strcmp(labelTable[i].name, arg2) == 0) {
+                        offset = labelTable[i].value;
+                        break;
+                    }
+                }
+
+                if (offset == 32768) {
+                    fprintf(stderr, "Error: Label '%s' not found at line %d\n", arg2, lineCounter);
+                    exit(1);
+                }
+            }
+
+            // Convert the offset value to binary and copy it to machineCode[15]->[0]
+            offsetBinary = decimalToBinary16Array(offset);
+            for (int i = 0; i < 16; i++) {
+                machineCode[i] = offsetBinary[i];
+            }
+
+            free(regA);
+            free(regB);
+            free(offsetBinary);
+
+
         }else if (strcmp(opcode, "jalr") == 0) {
         // Map "jalr" instruction to machine code
-        
+
+            machineCode[24] = 1;machineCode[23] = 0;machineCode[22] = 1;
+
+            int* regA = decimalToBinary3Array(atoi(arg0));
+            int* regB = decimalToBinary3Array(atoi(arg1));
+
+            machineCode[21] = regA[2];machineCode[20] = regA[1];machineCode[19] = regA[0];
+
+            machineCode[18] = regB[2];machineCode[17] = regB[1];machineCode[16] = regB[0];
+
+            free(regA);
+            free(regB);
+
         }else if (strcmp(opcode, "halt") == 0) {
         // Map "halt" instruction to machine code
-        
+
+            machineCode[24] = 1;machineCode[23] = 1;machineCode[22] = 0;
+
         }else if (strcmp(opcode, "noop") == 0) {
         // Map "noop" instruction to machine code
-        
+
+            machineCode[24] = 1;machineCode[23] = 1;machineCode[22] = 1;
+
         }else if (strcmp(opcode, ".fill") == 0) {
         // Map ".fill" instruction to machine code
-        
+            int offset;
+            int* offsetBinary = NULL;
+
+            if (isNumber(arg0)) {
+                // If arg2 is a number, use it directly
+                offset = atoi(arg0);
+            } else {
+                // Find the label's corresponding value
+                offset = 32768; // Initialize to an invalid value
+                for (int i = 0; i < *labelCount; i++) {
+                    if (strcmp(labelTable[i].name, arg0) == 0) {
+                        offset = labelTable[i].value;
+                        break;
+                    }
+                }
+
+                if (offset == 32768) {
+                    fprintf(stderr, "Error: Label '%s' not found at line %d\n", arg0, lineCounter);
+                    exit(1);
+                }
+            }
+
+            // Convert the offset value to binary and copy it to machineCode[15]->[0]
+            offsetBinary = decimalToBinary16Array(offset);
+            for (int i = 0; i < 16; i++) {
+                machineCode[i] = offsetBinary[i];
+            }
+
+            free(offsetBinary);
+
+            
+
         }
+
+        // Print the address "i: 000..."
+        printf("Address %d :", lineCounter);
+
+        // Print the machineCode from bit 32 to 1
+        for (int i = 31; i >= 0; i--) {
+            printf("%d", machineCode[i]);
+        }
+        printf("\n");
 
     }
 
+    
+    return machineCode[0];
+
+}
+
+int* decimalToBinary3Array(int decimalValue) {
+    if(decimalValue< 0 || decimalValue >7) exit(0);
+
+
+    int* binaryArray = (int*)malloc(3 * sizeof(int));
+
+    binaryArray[2] = (decimalValue & 4) ? 1 : 0;
+    binaryArray[1] = (decimalValue & 2) ? 1 : 0;
+    binaryArray[0] = (decimalValue & 1) ? 1 : 0;
+
+    return binaryArray;
+}
+
+int* decimalToBinary16Array(int decimalValue) {
+    if (decimalValue < -32768 || decimalValue > 32767) {
+        // Handle out-of-range values or any other error condition
+        // You can choose to return an error code or exit the program
+        // Here, I'm exiting with an error message
+        fprintf(stderr, "Error: Decimal value out of range.\n");
+        exit(1);
+    }
+
+    int* binaryArray = (int*)malloc(16 * sizeof(int));
+
+    // Check if the value is negative
+    int isNegative = (decimalValue < 0) ? 1 : 0;
+
+    // Convert to positive if negative
+    if (isNegative) {
+        decimalValue = -decimalValue;
+    }
+
+    // Initialize all bits to 0
+    for (int i = 0; i < 16; i++) {
+        binaryArray[i] = 0;
+    }
+
+    // Convert to binary and store in the array
+    for (int i = 15; i >= 0; i--) {
+        binaryArray[i] = decimalValue % 2;
+        decimalValue /= 2;
+    }
+
+    // Apply 2's complement if the value was negative
+    if (isNegative) {
+        // Invert all bits
+        for (int i = 0; i < 16; i++) {
+            binaryArray[i] = (binaryArray[i] == 0) ? 1 : 0;
+        }
+
+        // Add 1 to the binary representation
+        int carry = 1;
+        for (int i = 15; i >= 0; i--) {
+            int sum = binaryArray[i] + carry;
+            binaryArray[i] = sum % 2;
+            carry = sum / 2;
+        }
+    }
+
+    return binaryArray;
 }
 
 
