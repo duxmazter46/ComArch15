@@ -22,6 +22,9 @@ void secondPass(FILE *, LabelEntry[], int*);
 int thirdPass(FILE *, LabelEntry[], int*);
 int* decimalToBinary3Array(int );
 int* decimalToBinary16Array(int );
+char* intArrayToCharArray(const int intArray[32]);
+char* binaryToHex(const char* binary);
+
 
 int main(int argc, char *argv[])
 {
@@ -260,7 +263,7 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
     char label[MAXLINELENGTH], opcode[MAXLINELENGTH], arg0[MAXLINELENGTH],
         arg1[MAXLINELENGTH], arg2[MAXLINELENGTH];
 
-    int machineCode[32] = {0}; 
+    int machineCode[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; 
     int value;
 
     int lineCounter = 0;
@@ -268,11 +271,11 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
 
     while (readAndParse(inFilePtr, label, opcode, arg0, arg1, arg2)) {
         lineCounter++;
-        
-        for(int i = 0; i < 32;i++){
+
+        for(int i = 0; i < 32; i++ ){
             machineCode[i] = 0;
         }
-    
+
 
         // Map the opcode to machine code based on the instruction
         if (strcmp(opcode, "add") == 0) {
@@ -342,7 +345,7 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
                 offset = 32768; // Initialize to an invalid value
                 for (int i = 0; i < *labelCount; i++) {
                     if (strcmp(labelTable[i].name, arg2) == 0) {
-                        offset = labelTable[i].value;
+                        offset = labelTable[i].add;
                         break;
                     }
                 }
@@ -355,9 +358,20 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
 
             // Convert the offset value to binary and copy it to machineCode[15]->[0]
             offsetBinary = decimalToBinary16Array(offset);
-            for (int i = 0; i < 16; i++) {
-                machineCode[i] = offsetBinary[i];
+            for (int i = 0; i < 15 ; i++) {
+                machineCode[i] = offsetBinary[15-i];
             }
+
+            printf("opcode:%d%d%d ",machineCode[24],machineCode[23],machineCode[22]);
+            printf("regA:%d%d%d ",machineCode[21],machineCode[20],machineCode[19]);
+            printf("regB:%d%d%d ",machineCode[18],machineCode[17],machineCode[16]);
+            printf("offset:");
+            for (int i = 15; i >= 0; i--) {
+                printf("%d",machineCode[i]);
+            }
+            printf(" ");
+
+        
 
             free(regA);
             free(regB);
@@ -385,7 +399,7 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
                 offset = 32768; // Initialize to an invalid value
                 for (int i = 0; i < *labelCount; i++) {
                     if (strcmp(labelTable[i].name, arg2) == 0) {
-                        offset = labelTable[i].value;
+                        offset = labelTable[i].add;
                         break;
                     }
                 }
@@ -398,9 +412,20 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
 
             // Convert the offset value to binary and copy it to machineCode[15]->[0]
             offsetBinary = decimalToBinary16Array(offset);
-            for (int i = 0; i < 16; i++) {
-                machineCode[i] = offsetBinary[i];
+            for (int i = 0; i < 15 ; i++) {
+                machineCode[i] = offsetBinary[15-i];
             }
+
+            printf("opcode:%d%d%d ",machineCode[24],machineCode[23],machineCode[22]);
+            printf("regA:%d%d%d ",machineCode[21],machineCode[20],machineCode[19]);
+            printf("regB:%d%d%d ",machineCode[18],machineCode[17],machineCode[16]);
+            printf("offset:");
+            for (int i = 15; i >= 0; i--) {
+                printf("%d",machineCode[i]);
+            }
+            printf(" ");
+
+        
 
             free(regA);
             free(regB);
@@ -430,7 +455,8 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
                 offset = 32768; // Initialize to an invalid value
                 for (int i = 0; i < *labelCount; i++) {
                     if (strcmp(labelTable[i].name, arg2) == 0) {
-                        offset = labelTable[i].value;
+                        offset = labelTable[i].add - (lineCounter);
+                        printf("off:%d ",offset);
                         break;
                     }
                 }
@@ -443,9 +469,20 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
 
             // Convert the offset value to binary and copy it to machineCode[15]->[0]
             offsetBinary = decimalToBinary16Array(offset);
-            for (int i = 0; i < 16; i++) {
-                machineCode[i] = offsetBinary[i];
+            for (int i = 0; i < 15 ; i++) {
+                machineCode[i] = offsetBinary[15-i];
             }
+
+            printf("opcode:%d%d%d ",machineCode[24],machineCode[23],machineCode[22]);
+            printf("regA:%d%d%d ",machineCode[21],machineCode[20],machineCode[19]);
+            printf("regB:%d%d%d ",machineCode[18],machineCode[17],machineCode[16]);
+            printf("offset:");
+            for (int i = 15; i >= 0; i--) {
+                printf("%d",machineCode[i]);
+            }
+            printf(" ");
+
+        
 
             free(regA);
             free(regB);
@@ -464,6 +501,11 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
 
             machineCode[18] = regB[2];machineCode[17] = regB[1];machineCode[16] = regB[0];
 
+            printf("opcode:%d%d%d ",machineCode[24],machineCode[23],machineCode[22]);
+            printf("regA:%d%d%d ",machineCode[21],machineCode[20],machineCode[19]);
+            printf("regB:%d%d%d ",machineCode[18],machineCode[17],machineCode[16]);
+
+
             free(regA);
             free(regB);
 
@@ -472,10 +514,14 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
 
             machineCode[24] = 1;machineCode[23] = 1;machineCode[22] = 0;
 
+            printf("opcode:%d%d%d ",machineCode[24],machineCode[23],machineCode[22]);
+
         }else if (strcmp(opcode, "noop") == 0) {
         // Map "noop" instruction to machine code
 
             machineCode[24] = 1;machineCode[23] = 1;machineCode[22] = 1;
+
+            printf("opcode:%d%d%d ",machineCode[24],machineCode[23],machineCode[22]);
 
         }else if (strcmp(opcode, ".fill") == 0) {
         // Map ".fill" instruction to machine code
@@ -515,10 +561,15 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
 
         if(strcmp(opcode,".fill") != 0){
             // Print the machineCode from bit 32 to 1
-            for (int i = 31; i >= 0; i--) {
-            printf("%d", machineCode[i]);
-        }
-        printf("\n");
+            char* charCode = intArrayToCharArray(machineCode);
+            printf("%s",charCode);
+
+            char* hexArray = binaryToHex(charCode);
+            printf("> 0x%s\n", hexArray);
+
+            
+            free(hexArray);
+            
         }else{
             printf("%d\n",value);
         }
@@ -592,6 +643,54 @@ int* decimalToBinary16Array(int decimalValue) {
     }
 
     return binaryArray;
+}
+
+// Function to cast a binary 32-bit integer array to a character array
+char* intArrayToCharArray(const int intArray[32]) {
+    char* charArray = (char*)malloc(33); // 32 bits + null terminator
+    if (charArray == NULL) {
+        fprintf(stderr, "Error: Memory allocation failed\n");
+        exit(1);
+    }
+
+    for (int i = 0; i < 32; i++) {
+        charArray[i] = intArray[31-i] ? '1' : '0';
+    }
+
+    charArray[32] = '\0'; // Null-terminate the string
+
+    return charArray;
+}
+
+// Function to convert a binary character array to a hexadecimal character array
+char* binaryToHex(const char* binary) {
+    int binaryLength = strlen(binary);
+    
+    // Ensure that the length of the binary string is a multiple of 4
+    if (binaryLength % 4 != 0) {
+        fprintf(stderr, "Error: Binary string length must be a multiple of 4.\n");
+        exit(1);
+    }
+    
+    int hexLength = binaryLength / 4;
+    char* hexString = (char*)malloc(hexLength + 1); // +1 for null terminator
+    
+    if (hexString == NULL) {
+        fprintf(stderr, "Error: Memory allocation failed\n");
+        exit(1);
+    }
+    
+    for (int i = 0; i < hexLength; i++) {
+        char binaryChunk[5]; // 4 bits + null terminator
+        strncpy(binaryChunk, binary + i * 4, 4);
+        binaryChunk[4] = '\0';
+        int decimalValue = strtol(binaryChunk, NULL, 2);
+        sprintf(hexString + i, "%x", decimalValue);
+    }
+    
+    hexString[hexLength] = '\0'; // Null-terminate the string
+    
+    return hexString;
 }
 
 
