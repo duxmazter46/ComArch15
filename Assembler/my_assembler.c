@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
     LabelEntry labelTable[MAXLABELS];
     int labelCount = 0;
 
-        // First pass to compute label addresses/values
+    // First pass to compute label addresses/values
     firstPass(inFilePtr, labelTable, &labelCount);
 
     // Rewind the input file for the second pass
@@ -170,6 +170,23 @@ int isNumber(char *string)
     return( (sscanf(string, "%d", &i)) == 1);
 }
 
+/*
+ * Perform the first pass of assembly code parsing. This pass reads lines from
+ * the input assembly-language file, identifies labels, opcodes, and arguments,
+ * and populates the label table with label names and their corresponding
+ * addresses.
+ *
+ * Parameters:
+ *   inFilePtr   - Pointer to the input assembly-language file.
+ *   labelTable  - An array of LabelEntry structures to store label information.
+ *   labelCount  - Pointer to an integer to track the count of labels.
+ *
+ * Return values:
+ *   None. The labelTable and labelCount parameters are updated with label
+ *   information.
+ *
+ * Exit(1) if a line is too long or if the maximum number of labels is exceeded.
+ */
 void firstPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
     char label[MAXLINELENGTH], opcode[MAXLINELENGTH], arg0[MAXLINELENGTH],
         arg1[MAXLINELENGTH], arg2[MAXLINELENGTH];
@@ -231,6 +248,18 @@ void firstPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
 
 }
 
+/*
+ * Perform the second pass of assembly code parsing. This pass updates the values
+ * of labels in the labelTable based on .fill instructions.
+ *
+ * Parameters:
+ *   inFilePtr   - Pointer to the input assembly-language file.
+ *   labelTable  - An array of LabelEntry structures storing label information.
+ *   labelCount  - Pointer to an integer indicating the count of labels.
+ *
+ * Return value:
+ *   1 if the second pass completes successfully.
+ */
 int secondPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
     char label[MAXLINELENGTH], opcode[MAXLINELENGTH], arg0[MAXLINELENGTH],
         arg1[MAXLINELENGTH], arg2[MAXLINELENGTH];
@@ -276,6 +305,19 @@ int secondPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
     return 1;
 }
 
+/*
+ * Perform the third pass of assembly code parsing. This pass generates machine
+ * code for the instructions and fills the 'code' array with the corresponding values.
+ *
+ * Parameters:
+ *   inFilePtr   - Pointer to the input assembly-language file.
+ *   labelTable  - An array of LabelEntry structures storing label information.
+ *   labelCount  - Pointer to an integer indicating the count of labels.
+ *   code        - An integer array to store the generated machine code values.
+ *
+ * Return value:
+ *   The number of lines processed during the third pass.
+ */
 int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
     char label[MAXLINELENGTH], opcode[MAXLINELENGTH], arg0[MAXLINELENGTH],
         arg1[MAXLINELENGTH], arg2[MAXLINELENGTH];
@@ -603,6 +645,15 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
 
 }
 
+/*
+ * Convert a decimal value (0 to 7) to a 3-bit binary integer array.
+ *
+ * Parameters:
+ *   decimalValue: The decimal value to convert (0 to 7).
+ *
+ * Returns:
+ *   An integer array representing the binary value (3 bits).
+ */
 int* decimalToBinary3Array(int decimalValue) {
     if(decimalValue< 0 || decimalValue >7) exit(0);
 
@@ -616,6 +667,16 @@ int* decimalToBinary3Array(int decimalValue) {
     return binaryArray;
 }
 
+/*
+ * Convert a decimal value (-32768 to 32767) to a 16-bit binary integer array.
+ * Handles two's complement representation for negative values.
+ *
+ * Parameters:
+ *   decimalValue: The decimal value to convert (-32768 to 32767).
+ *
+ * Returns:
+ *   An integer array representing the binary value (16 bits).
+ */
 int* decimalToBinary16Array(int decimalValue) {
     if (decimalValue < -32768 || decimalValue > 32767) {
         // Handle out-of-range values or any other error condition
@@ -666,7 +727,15 @@ int* decimalToBinary16Array(int decimalValue) {
     return binaryArray;
 }
 
-// Function to cast a binary 32-bit integer array to a character array
+/*
+ * Convert a binary integer array (32 bits) to a character array (string).
+ *
+ * Parameters:
+ *   intArray: An array of 32 integers representing the binary value.
+ *
+ * Returns:
+ *   A character array (string) representing the binary value.
+ */
 char* intArrayToCharArray(const int intArray[32]) {
     char* charArray = (char*)malloc(33); // 32 bits + null terminator
     if (charArray == NULL) {
@@ -683,7 +752,16 @@ char* intArrayToCharArray(const int intArray[32]) {
     return charArray;
 }
 
-// Function to convert a binary character array to a hexadecimal character array
+/*
+ * Convert a binary character array to a hexadecimal character array.
+ * Assumes the binary string length is a multiple of 4.
+ *
+ * Parameters:
+ *   binary: A binary character array (string).
+ *
+ * Returns:
+ *   A hexadecimal character array (string).
+ */
 char* binaryToHex(const char* binary) {
     int binaryLength = strlen(binary);
     
@@ -714,7 +792,16 @@ char* binaryToHex(const char* binary) {
     return hexString;
 }
 
-// Function to convert a hexadecimal character to its decimal value
+/*
+ * Convert a hexadecimal character to its decimal value.
+ *
+ * Parameters:
+ *   hexChar: A single hexadecimal character ('0' to '9', 'A' to 'F', or 'a' to 'f').
+ *
+ * Returns:
+ *   The decimal value corresponding to the hexadecimal character.
+ */
+
 int hexCharToDecimal(char hexChar) {
     if (hexChar >= '0' && hexChar <= '9') {
         return hexChar - '0';
@@ -728,8 +815,15 @@ int hexCharToDecimal(char hexChar) {
     exit(1);
 }
 
-
-// Function to convert a hexadecimal string to a decimal integer
+/*
+ * Convert a hexadecimal string to a decimal integer.
+ *
+ * Parameters:
+ *   hexString: A hexadecimal string.
+ *
+ * Returns:
+ *   The decimal integer value corresponding to the hexadecimal string.
+ */
 int hexToDecimal(const char* hexString) {
     int length = strlen(hexString);
     int result = 0;
