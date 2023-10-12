@@ -6,6 +6,8 @@
 
 #define MAXLINELENGTH 1000
 #define MAXLABELS 100
+#define MAXLINES 100
+
 
 typedef struct {
     char name[MAXLINELENGTH];
@@ -13,17 +15,19 @@ typedef struct {
     int add;
 } LabelEntry;
 
-int code[32] = {0};
+int code[MAXLINES] = {0};
 
 int readAndParse(FILE *, char *, char *, char *, char *, char *);
 int isNumber(char *);
 void firstPass(FILE *, LabelEntry[], int *);
-void secondPass(FILE *, LabelEntry[], int*);
+int secondPass(FILE *, LabelEntry[], int*);
 int thirdPass(FILE *, LabelEntry[], int*);
 int* decimalToBinary3Array(int );
 int* decimalToBinary16Array(int );
 char* intArrayToCharArray(const int intArray[32]);
 char* binaryToHex(const char* binary);
+int hexCharToDecimal(char hexChar);
+int hexToDecimal(const char* hexString);
 
 
 int main(int argc, char *argv[])
@@ -89,8 +93,18 @@ int main(int argc, char *argv[])
     // Rewind the input file for the third pass
     rewind(inFilePtr);
 
-    thirdPass(inFilePtr, labelTable, &labelCount);
+    int lines = thirdPass(inFilePtr, labelTable, &labelCount);
 
+
+    printf("\nWriting %d lines to output\n\n",lines);
+    for(int i = 0 ; i < lines;i++){
+        printf("%d\n",code[i]);
+        // Print each line to the output file
+        fprintf(outFilePtr, "%d\n", code[i]);
+    }
+
+    // Close the output file
+    fclose(outFilePtr);
 
     return(0);
 }
@@ -217,7 +231,7 @@ void firstPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
 
 }
 
-void secondPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
+int secondPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
     char label[MAXLINELENGTH], opcode[MAXLINELENGTH], arg0[MAXLINELENGTH],
         arg1[MAXLINELENGTH], arg2[MAXLINELENGTH];
 
@@ -252,11 +266,14 @@ void secondPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
         }
     }
 
+
     // Print all labels and their updated values
     printf("\nLabels and Updated Values after Second Pass:\n");
     for (int i = 0; i < *labelCount; i++) {
         printf("Label: %-10s Value: %d Address: %d\n", labelTable[i].name, labelTable[i].value, labelTable[i].add);
     }
+
+    return 1;
 }
 
 int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
@@ -456,7 +473,6 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
                 for (int i = 0; i < *labelCount; i++) {
                     if (strcmp(labelTable[i].name, arg2) == 0) {
                         offset = labelTable[i].add - (lineCounter);
-                        printf("off:%d ",offset);
                         break;
                     }
                 }
@@ -472,6 +488,7 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
             for (int i = 0; i < 15 ; i++) {
                 machineCode[i] = offsetBinary[15-i];
             }
+            if(offset < 0)  machineCode[15] = 1 ;
 
             printf("opcode:%d%d%d ",machineCode[24],machineCode[23],machineCode[22]);
             printf("regA:%d%d%d ",machineCode[21],machineCode[20],machineCode[19]);
@@ -565,21 +582,24 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
             printf("%s",charCode);
 
             char* hexArray = binaryToHex(charCode);
-            printf("> 0x%s\n", hexArray);
+            printf(" (hex 0x%s)", hexArray);
 
-            
+            // Convert the hexArray back to decimal
+            int decimalValueFromArray = hexToDecimal(hexArray);
+            printf("%d\n", decimalValueFromArray);
+            code[lineCounter-1] = decimalValueFromArray;
+
             free(hexArray);
             
         }else{
             printf("%d\n",value);
+            code[lineCounter-1] = value;
         }
-        
         
 
     }
-
     
-    return machineCode[0];
+    return lineCounter;
 
 }
 
@@ -629,7 +649,7 @@ int* decimalToBinary16Array(int decimalValue) {
     // Apply 2's complement if the value was negative
     if (isNegative) {
         // Invert all bits
-        for (int i = 0; i < 16; i++) {
+        for (int i = 0; i < 16 ; i++) {
             binaryArray[i] = (binaryArray[i] == 0) ? 1 : 0;
         }
 
@@ -640,6 +660,7 @@ int* decimalToBinary16Array(int decimalValue) {
             binaryArray[i] = sum % 2;
             carry = sum / 2;
         }
+
     }
 
     return binaryArray;
@@ -693,6 +714,31 @@ char* binaryToHex(const char* binary) {
     return hexString;
 }
 
+// Function to convert a hexadecimal character to its decimal value
+int hexCharToDecimal(char hexChar) {
+    if (hexChar >= '0' && hexChar <= '9') {
+        return hexChar - '0';
+    } else if (hexChar >= 'A' && hexChar <= 'F') {
+        return hexChar - 'A' + 10;
+    } else if (hexChar >= 'a' && hexChar <= 'f') {
+        return hexChar - 'a' + 10;
+    }
+    // Handle invalid characters
+    fprintf(stderr, "Error: Invalid hexadecimal character '%c'\n", hexChar);
+    exit(1);
+}
 
+
+// Function to convert a hexadecimal string to a decimal integer
+int hexToDecimal(const char* hexString) {
+    int length = strlen(hexString);
+    int result = 0;
+
+    for (int i = 0; i < length; i++) {
+        result = result * 16 + hexCharToDecimal(hexString[i]);
+    }
+
+    return result;
+}
 
 
