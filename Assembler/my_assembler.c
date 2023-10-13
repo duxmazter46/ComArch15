@@ -341,20 +341,16 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
         // Map "add" instruction to machine code
 
             machineCode[24] = 0;machineCode[23] = 0;machineCode[22] = 0;
-            printf("opcode:%d%d%d ",machineCode[24],machineCode[23],machineCode[22]);
-
+            
             int* regA = decimalToBinary3Array(atoi(arg0));
             int* regB = decimalToBinary3Array(atoi(arg1));
             int* dest = decimalToBinary3Array(atoi(arg2));
 
             machineCode[21] = regA[2];machineCode[20] = regA[1];machineCode[19] = regA[0];
-            printf("regA:%d%d%d ",machineCode[21],machineCode[20],machineCode[19]);
-
+            
             machineCode[18] = regB[2];machineCode[17] = regB[1];machineCode[16] = regB[0];
-            printf("regB:%d%d%d ",machineCode[18],machineCode[17],machineCode[16]);
-
+            
             machineCode[2] = dest[2];machineCode[1] = dest[1];machineCode[0] = dest[0];
-            printf("dest:%d%d%d ",machineCode[2],machineCode[1],machineCode[0]);
 
             free(regA);
             free(regB);
@@ -421,14 +417,6 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
                 machineCode[i] = offsetBinary[15-i];
             }
 
-            printf("opcode:%d%d%d ",machineCode[24],machineCode[23],machineCode[22]);
-            printf("regA:%d%d%d ",machineCode[21],machineCode[20],machineCode[19]);
-            printf("regB:%d%d%d ",machineCode[18],machineCode[17],machineCode[16]);
-            printf("offset:");
-            for (int i = 15; i >= 0; i--) {
-                printf("%d",machineCode[i]);
-            }
-            printf(" ");
 
         
 
@@ -474,15 +462,6 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
             for (int i = 0; i < 15 ; i++) {
                 machineCode[i] = offsetBinary[15-i];
             }
-
-            printf("opcode:%d%d%d ",machineCode[24],machineCode[23],machineCode[22]);
-            printf("regA:%d%d%d ",machineCode[21],machineCode[20],machineCode[19]);
-            printf("regB:%d%d%d ",machineCode[18],machineCode[17],machineCode[16]);
-            printf("offset:");
-            for (int i = 15; i >= 0; i--) {
-                printf("%d",machineCode[i]);
-            }
-            printf(" ");
 
         
 
@@ -532,17 +511,6 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
             }
             if(offset < 0)  machineCode[15] = 1 ;
 
-            printf("opcode:%d%d%d ",machineCode[24],machineCode[23],machineCode[22]);
-            printf("regA:%d%d%d ",machineCode[21],machineCode[20],machineCode[19]);
-            printf("regB:%d%d%d ",machineCode[18],machineCode[17],machineCode[16]);
-            printf("offset:");
-            for (int i = 15; i >= 0; i--) {
-                printf("%d",machineCode[i]);
-            }
-            printf(" ");
-
-        
-
             free(regA);
             free(regB);
             free(offsetBinary);
@@ -572,8 +540,6 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
         // Map "halt" instruction to machine code
 
             machineCode[24] = 1;machineCode[23] = 1;machineCode[22] = 0;
-
-            printf("opcode:%d%d%d ",machineCode[24],machineCode[23],machineCode[22]);
 
         }else if (strcmp(opcode, "noop") == 0) {
         // Map "noop" instruction to machine code
