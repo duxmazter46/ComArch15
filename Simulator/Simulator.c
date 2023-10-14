@@ -1,6 +1,19 @@
 #include <stdio.h>
 #include <stdint.h>
 
+/*
+ Rules for Simulator 
+1) (simulator) อย่าแก้ printState หรือ stateStruct
+
+2) (simulator) Call printState 1 ครั้ง ก่อน instruction executes และ 1 ครั้ง  ก่อน simulator exits.  อย่า call printState ที่อื่น.
+
+3) (simulator) อย่า print "@@@" ที่ใดยกเว้นใน printState.
+
+4) (simulator) state.numMemory ต้อง เท่ากับ จำนวนบรรทัด ใน machine-code file.
+
+5) (simulator) Initialize ทุก registers ให้เป็น 0.
+*/
+
 // Define the number of registers
 #define NUM_REGISTERS 32
 
