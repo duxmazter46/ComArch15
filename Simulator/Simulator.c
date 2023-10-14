@@ -14,104 +14,92 @@
 5) (simulator) Initialize ทุก registers ให้เป็น 0.
 */
 
-// Define the number of registers
-#define NUM_REGISTERS 32
+// Define the maximum number of memory locations
+#define MAX_MEMORY 1024
 
-// Define the size of the memory
-#define MEMORY_SIZE 1024
+// Define the state structure
+struct stateStruct {
+    uint32_t registers[32];
+    uint32_t memory[MAX_MEMORY];
+    uint32_t numMemory;
+    uint32_t programCounter;
+};
 
-// Define the instruction set opcodes
-#define ADD 0x20
-#define SUB 0x22
-#define LW 0x23
-#define SW 0x2B
-#define BEQ 0x04
-#define HALT 0x3F
-
-// Define the machine's registers and memory
-uint32_t registers[NUM_REGISTERS];
-uint32_t memory[MEMORY_SIZE];
-
-// Sign extension function for 16-bit 2's complement numbers
-int32_t signExtend(uint16_t value) {
-    if (value & 0x8000) {
-        return (int32_t)value | 0xFFFF0000;
+// Function to initialize the state structure
+void initializeState(struct stateStruct *state) {
+    for (int i = 0; i < 32; i++) {
+        state->registers[i] = 0;
     }
-    return value;
-}
-
-// Function to load machine code into memory
-void loadMachineCode(uint32_t* machineCode, int codeSize) {
-    for (int i = 0; i < codeSize; i++) {
-        memory[i] = machineCode[i];
+    for (int i = 0; i < MAX_MEMORY; i++) {
+        state->memory[i] = 0;
     }
-}
-
-// Function to simulate machine code execution
-void executeMachineCode() {
-    uint32_t programCounter = 0;
-    
-    while (1) {
-        uint32_t instruction = memory[programCounter];
-        uint32_t opcode = instruction >> 26;
-        
-        // Extract fields from the instruction
-        uint32_t rs = (instruction >> 21) & 0x1F;
-        uint32_t rt = (instruction >> 16) & 0x1F;
-        uint32_t rd = (instruction >> 11) & 0x1F;
-        uint32_t immediate = instruction & 0xFFFF;
-        
-        switch (opcode) {
-            case ADD:
-                registers[rd] = registers[rs] + registers[rt];
-                break;
-            case SUB:
-                registers[rd] = registers[rs] - registers[rt];
-                break;
-            case LW:
-                registers[rt] = memory[registers[rs] + signExtend(immediate) / 4];
-                break;
-            case SW:
-                memory[registers[rs] + signExtend(immediate) / 4] = registers[rt];
-                break;
-            case BEQ:
-                if (registers[rs] == registers[rt]) {
-                    programCounter += signExtend(immediate) << 2;
-                }
-                break;
-            case HALT:
-                return;
-        }
-        
-        // Increment the program counter
-        programCounter++;
-    }
+    state->numMemory = 0;
+    state->programCounter = 0;
 }
 
 // Function to print the current state of the machine
-void printState() {
-    // Print register values, memory contents, and program counter
-    // You can implement this part according to your requirements
+void printState(struct stateStruct *state) {
+    printf("@@@\nstate:\n");
+    printf("    pc %d\n", state->programCounter);
+    for (int i = 0; i < 32; i++) {
+        printf("    reg[%d] %d\n", i, state->registers[i]);
+    }
+    for (int i = 0; i < state->numMemory; i++) {
+        printf("    mem[%d] %d\n", i, state->memory[i]);
+    }
+}
+
+// Function to execute machine code
+void executeMachineCode(struct stateStruct *state) {
+    while (state->programCounter < state->numMemory) {
+        // Call printState before executing the command
+        printState(state);
+
+        // Fetch the instruction from memory
+        uint32_t instruction = state->memory[state->programCounter];
+        uint32_t opcode = (instruction >> 26) & 0x3F;
+        uint32_t rs = (instruction >> 21) & 0x1F;
+        uint32_t rt = (instruction >> 16) & 0x1F;
+        uint32_t rd = (instruction >> 11) & 0x1F;
+        int32_t immediate = instruction & 0xFFFF;
+
+        // Execute the instruction (simplified for illustration)
+        switch (opcode) {
+            case 0x20: // ADD
+                state->registers[rd] = state->registers[rs] + state->registers[rt];
+                break;
+            case 0x23: // LW
+                // Simplified memory access (assuming byte addressable memory)
+                state->registers[rt] = state->memory[state->registers[rs] + immediate];
+                break;
+            // Add cases for other instructions
+            // ...
+            default:
+                // Handle unknown instruction
+                // ...
+
+        }
+
+        // Increment the program counter
+        state->programCounter++;
+    }
+
+    // Call printState before exiting
+    printState(state);
 }
 
 int main() {
-    // Example machine code (you need to replace this with your actual code)
-    uint32_t machineCode[] = { 0x22090001, 0x024B4820, 0x8C4A0000, 0xAC4A0000, 0x106A0001, 0x0000003F };
-    
-    // Initialize registers to zero
-    for (int i = 0; i < NUM_REGISTERS; i++) {
-        registers[i] = 0;
-    }
-    
-    // Load machine code into memory
-    int codeSize = sizeof(machineCode) / sizeof(machineCode[0]);
-    loadMachineCode(machineCode, codeSize);
-    
-    // Execute the machine code
-    executeMachineCode();
-    
-    // Print the final state of the machine
-    printState();
-    
+    struct stateStruct state;
+    initializeState(&state);
+
+    // Example: Load machine code into memory (replace this with actual machine code)
+    state.memory[0] = 0x20090001; // Example LW instruction
+    state.memory[1] = 0x0000000A; // Memory value at address 10
+
+    state.numMemory = 2;
+
+    // Execute machine code
+    executeMachineCode(&state);
+
     return 0;
 }
