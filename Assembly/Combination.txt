@@ -1,9 +1,8 @@
 		        lw	    0     1	n			        x1 = n
-		        lw	    0	  2	r			        x2 = r
-		        lw	    0	  3	returnValue		
-		        lw	    0	  4	funcAddress		    	x4 = function address		
-		        lw	    0	  5	stackPointer			x5 = stackPointer
-		        lw	    0     6	negativeThree			x6 = -3
+		        lw	    0	  2	r			        x2 = r		
+		        lw	    0	  4	func		    		x4 = function address		
+		        lw	    0	  5	stackP				x5 = stackPointer
+		        lw	    0     6	nThree				x6 = -3
 		        jalr	    4	  3				        go to function address
 		        add	    5	  6	5			        x5 = x5-3(stack)
 		        sw	    5	  4	2			        store x4 to x5+2
@@ -11,25 +10,25 @@
 		        sw	    5	  2	0			        store x2 to x5+0
 		        beq	    2	  0	addOne			    	if r = 0 go to return
 		        beq	    2	  1	addOne			    	if r = n go to return
-		        lw	    0	  7	negativeOne		    	x7 = -1
+		        lw	    0	  7	nOne		    		x7 = -1
 		        add	    1	  7	1			        n = n-1
 		        jalr	    4	  3				        go to function address
 		        add	    2  	  7	2			        r = r-1
 		        jalr	    4	  3				        go to function address
 		        beq	    1	  2	finish			   	if n=r go to finish
-addOne		    	lw	    0	  7	positiveOne		    	x7 = -1
+addOne		    	lw	    0	  7	pOne		    		x7 = -1
 		        add	    3	  7	3			        returnValue = returnValue+1
 finish		    	lw	    5	  2	0			        load from x5+0 to x2
 		        lw	    5	  1	1			        load from x5+1 to x1
 		        lw	    5	  4	2			        load from x5+2 to x4
-		        lw	    0	  6	positiveThree			x6 = 3
+		        lw	    0	  6	pThree				x6 = 3
 		        add	    5	  6	5			        x5 = x5+3(stack)
 		        halt
 n		        .fill	    7					        input n
 r		        .fill	    3					        input r
-stackPointer		.fill	    0					        point at 0
-negativeThree		.fill	    -3
-negativeOne	    	.fill	    -1
-positiveOne	   	.fill	    1
-positiveThree		.fill	    3					
-funcAddress	    	.fill	    7					        function address = 7
+stackP			.fill	    0					        point at 0
+nThree			.fill	    -3
+nOne	    		.fill	    -1
+pOne	   		.fill	    1
+pThree			.fill	    3					
+func	    		.fill	    7					        function address = 7
