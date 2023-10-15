@@ -198,6 +198,11 @@ void firstPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
             fprintf(stderr, "Error: Label '%s' exceeds the maximum length of 6 characters at line %d\n", label, lineCounter);
             exit(1);
         }
+        // Check if the label is start with digit
+        if(label[0]>='0' && label[0]<='9') {
+            fprintf(stderr, "Error: Label '%s' first letter is digit at line %d\n", label, lineCounter);
+            exit(1);
+        }
 
     }
 
