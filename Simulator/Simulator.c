@@ -47,22 +47,43 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    state.pc = 0; // Initialize the program counter
+    state.numMemory = 0; // Initialize numMemory
+
     // Initialize registers to 0
     for (int i = 0; i < NUMREGS; i++) {
         state.reg[i] = 0;
     }
 
+    /* read in the entire machine-code file into memory */
     for (state.numMemory = 0; fgets(line, MAXLINELENGTH, filePtr) != NULL;
          state.numMemory++) {
         if (sscanf(line, "%d", state.mem + state.numMemory) != 1) {
             printf("error in reading address %d\n", state.numMemory);
             exit(1);
         }
-
+        printf("memory[%d]=%d\n", state.numMemory, state.mem[state.numMemory]);
+    }
         // Print the state before executing the command and exit
         printState(&state);
-        exit(0);
+        return 0;
     }
 
-    return 0;
-}
+
+    
+    void printState(stateType *statePtr)
+    {
+        int i;
+        printf("\n@@@\nstate:\n");
+        printf("\tpc %d\n", statePtr->pc);
+        printf("\tmemory:\n");
+        for (i=0; i<statePtr->numMemory; i++) {
+            printf("\t\tmem[ %d ] %d\n", i, statePtr->mem[i]);
+        }
+        printf("\tregisters:\n");
+        for (i=0; i<NUMREGS; i++) {
+            printf("\t\treg[ %d ] %d\n", i, statePtr->reg[i]);
+        }
+        printf("end state\n");
+    }   
+
