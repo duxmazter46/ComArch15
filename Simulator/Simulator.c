@@ -46,10 +46,7 @@ int main(int argc, char *argv[])
         perror("fopen");
         exit(1);
     }
-
-    state.pc = 0; // Initialize the program counter
-    state.numMemory = 0; // Initialize numMemory
-
+    
     // Initialize registers to 0
     for (int i = 0; i < NUMREGS; i++) {
         state.reg[i] = 0;
@@ -64,8 +61,9 @@ int main(int argc, char *argv[])
         }
         printf("memory[%d]=%d\n", state.numMemory, state.mem[state.numMemory]);
     }
-        // Print the state before executing the command and exit
-        printState(&state);
+        printState(&state); // Call printState before instruction execution
+    
+        printState(&state); // Call printState before exiting
         return 0;
     }
 
