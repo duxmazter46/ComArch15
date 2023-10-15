@@ -1,5 +1,3 @@
-/* Assembler code fragment */
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -8,14 +6,11 @@
 #define MAXLABELS 100
 #define MAXLINES 100
 
-
 typedef struct {
     char name[MAXLINELENGTH];
     int value;
     int add;
 } LabelEntry;
-
-int code[MAXLINES] = {0};
 
 int readAndParse(FILE *, char *, char *, char *, char *, char *);
 int isNumber(char *);
@@ -29,6 +24,7 @@ char* binaryToHex(const char* binary);
 int hexCharToDecimal(char hexChar);
 int hexToDecimal(const char* hexString);
 
+int code[33] = {0};
 
 int main(int argc, char *argv[])
 {
@@ -42,10 +38,8 @@ int main(int argc, char *argv[])
             argv[0]);
         exit(1);
     }
-
     inFileString = argv[1];
     outFileString = argv[2];
-
     inFilePtr = fopen(inFileString, "r");
     if (inFilePtr == NULL) {
         printf("error in opening %s\n", inFileString);
@@ -56,56 +50,25 @@ int main(int argc, char *argv[])
         printf("error in opening %s\n", outFileString);
         exit(1);
     }
-
-/*
-    //here is an example for how to use readAndParse to read a line from inFilePtr //
-
-    if (! readAndParse(inFilePtr, label, opcode, arg0, arg1, arg2) ) {
-
-        // reached end of file //
-
-    }
-
-    //this is how to rewind the file ptr so that you start reading from the beginning of the file //
-    rewind(inFilePtr);
-
-    //after doing a readAndParse, you may want to do the following to test the opcode //
-
-    if (!strcmp(opcode, "add")) {
-
-        // do whatever you need to do for opcode "add" //
-
-    }
-*/
-
     // Label table to store labels and their addresses/values
     LabelEntry labelTable[MAXLABELS];
     int labelCount = 0;
-
     // First pass to compute label addresses/values
     firstPass(inFilePtr, labelTable, &labelCount);
-
     // Rewind the input file for the second pass
     rewind(inFilePtr);
-
     secondPass(inFilePtr, labelTable, &labelCount);
-
     // Rewind the input file for the third pass
     rewind(inFilePtr);
-
     int lines = thirdPass(inFilePtr, labelTable, &labelCount);
-
-
     printf("\nWriting %d lines to output\n\n",lines);
     for(int i = 0 ; i < lines;i++){
         printf("%d\n",code[i]);
         // Print each line to the output file
         fprintf(outFilePtr, "%d\n", code[i]);
     }
-
     // Close the output file
     fclose(outFilePtr);
-
     return(0);
 }
 
@@ -160,8 +123,6 @@ int readAndParse(FILE *inFilePtr, char *label, char *opcode, char *arg0, char *a
     sscanf(ptr, "%*[\t\n ]%[^\t\n ]%*[\t\n ]%[^\t\n ]%*[\t\n ]%[^\t\n ]%*[\t\n ]%[^\t\n ]", opcode, arg0, arg1, arg2);
     return(1);
 }
-
-
 
 int isNumber(char *string)
 {
@@ -406,7 +367,7 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
                 }
 
                 if (offset == 32768) {
-                    fprintf(stderr, "Error: Label '%s' not found at line %d\n", arg2, lineCounter);
+                    fprintf(stderr, "Error: Label '%s' is undefined at line %d\n", arg2, lineCounter);
                     exit(1);
                 }
             }
@@ -452,7 +413,7 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
                 }
 
                 if (offset == 32768) {
-                    fprintf(stderr, "Error: Label '%s' not found at line %d\n", arg2, lineCounter);
+                    fprintf(stderr, "Error: Label '%s' is undefined at line %d\n", arg2, lineCounter);
                     exit(1);
                 }
             }
@@ -499,7 +460,7 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
                 }
 
                 if (offset == 32768) {
-                    fprintf(stderr, "Error: Label '%s' not found at line %d\n", arg2, lineCounter);
+                    fprintf(stderr, "Error: Label '%s' is undefined at line %d\n", arg2, lineCounter);
                     exit(1);
                 }
             }
@@ -528,11 +489,6 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
 
             machineCode[18] = regB[2];machineCode[17] = regB[1];machineCode[16] = regB[0];
 
-            printf("opcode:%d%d%d ",machineCode[24],machineCode[23],machineCode[22]);
-            printf("regA:%d%d%d ",machineCode[21],machineCode[20],machineCode[19]);
-            printf("regB:%d%d%d ",machineCode[18],machineCode[17],machineCode[16]);
-
-
             free(regA);
             free(regB);
 
@@ -546,13 +502,10 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
 
             machineCode[24] = 1;machineCode[23] = 1;machineCode[22] = 1;
 
-            printf("opcode:%d%d%d ",machineCode[24],machineCode[23],machineCode[22]);
-
         }else if (strcmp(opcode, ".fill") == 0) {
         // Map ".fill" instruction to machine code
             int offset;
             int* offsetBinary = NULL;
-
             if (isNumber(arg0)) {
                 // If arg2 is a number, use it directly
                 offset = atoi(arg0);
@@ -565,21 +518,18 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
                         break;
                     }
                 }
-
                 if (offset == 32768) {
                     fprintf(stderr, "Error: Label '%s' not found at line %d\n", arg0, lineCounter);
                     exit(1);
                 }
             }
-
             value = offset;
-
             free(offsetBinary);
-
-            
-
+        }else{
+            printf("error: undefined opcode %s",opcode);
+            exit(1);
         }
-
+    
         // Print the address "i: 000..."
         printf("(address %d): ", lineCounter-1);
         
@@ -621,7 +571,7 @@ int thirdPass(FILE *inFilePtr, LabelEntry labelTable[], int *labelCount) {
  *   An integer array representing the binary value (3 bits).
  */
 int* decimalToBinary3Array(int decimalValue) {
-    if(decimalValue< 0 || decimalValue >7) exit(0);
+    if(decimalValue< 0 || decimalValue >7) exit(1);
 
 
     int* binaryArray = (int*)malloc(3 * sizeof(int));
@@ -646,9 +596,7 @@ int* decimalToBinary3Array(int decimalValue) {
 int* decimalToBinary16Array(int decimalValue) {
     if (decimalValue < -32768 || decimalValue > 32767) {
         // Handle out-of-range values or any other error condition
-        // You can choose to return an error code or exit the program
-        // Here, I'm exiting with an error message
-        fprintf(stderr, "Error: Decimal value out of range.\n");
+        fprintf(stderr, "Error: value must not exceed binary 16 bits.\n");
         exit(1);
     }
 
